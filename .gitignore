@@ -1,0 +1,4 @@
+lib/*
+.Forgefile-*
+src/o/*
+
