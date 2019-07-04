@@ -1,4 +1,5 @@
 lib/*
 .Forgefile-*
 src/o/*
-
+src/test/bin/*
+src/test/o/*

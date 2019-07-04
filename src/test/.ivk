@@ -1,0 +1,1 @@
+--forgefiles=Forgefile.hsl --Forgefile-projects=mnemosine-tests --includes=cutest/src/ --libraries=cutest/src/lib --ldflags=-lcutest --obj-output-dir=o --bin-output-dir=bin

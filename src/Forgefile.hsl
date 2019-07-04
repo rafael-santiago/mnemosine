@@ -45,7 +45,29 @@ libmnemosine.prologue() {
 libmnemosine.epilogue() {
     if (hefesto.sys.last_forge_result() == 0) {
         hefesto.sys.echo("\n*** BUILD SUCCESS.\n");
+        if (run_tests() != 0) {
+            hefesto.project.abort(1);
+        }
     } else {
         hefesto.sys.echo("\n~~~ BUILD ERROR.\n");
     }
+}
+
+local function run_tests() : result type int {
+    var exit_code type int;
+    var old_cwd type string;
+    $old_cwd = hefesto.sys.pwd();
+    $exit_code = 1;
+    if (hefesto.sys.cd("test")) {
+        var cmdline type string;
+        var name type string;
+        $name = $toolset_name;
+        $name.replace("-.*$", "");
+        $cmdline = "hefesto --toolset=" + $name;
+        $exit_code = hefesto.sys.run($cmdline);
+        hefesto.sys.cd($old_cwd);
+    } else {
+        hefesto.sys.echo("\n~~~ BUILD EXCEPTION: Unable to find test directory.\n");
+    }
+    result $exit_code;
 }
