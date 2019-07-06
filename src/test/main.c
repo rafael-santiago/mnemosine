@@ -6,10 +6,169 @@
  *
  */
 #include <cutest.h>
+#include <mnemosine.h>
+#if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
+# include <stdlib.h>
+# include <time.h>
+# include <pthread.h>
+
+struct async_test_ctx {
+    char *id;
+    int secs2snooze;
+    pthread_t t;
+    struct mnemosine_ctx *mn;
+    void *ptr;
+    size_t ptr_size;
+    int retval;
+};
+#endif
 
 CUTE_DECLARE_TEST_CASE(mnemosine_tests);
+CUTE_DECLARE_TEST_CASE(mnemosine_size_macros_tests);
+CUTE_DECLARE_TEST_CASE(mnemosine_malloc_free_tests);
+#if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
+CUTE_DECLARE_TEST_CASE(mnemosine_malloc_free_async_tests);
+
+void *get_memory(void *arg);
+void *free_memory(void *arg);
+#endif
 
 CUTE_TEST_CASE(mnemosine_tests)
+    CUTE_RUN_TEST(mnemosine_size_macros_tests);
+    CUTE_RUN_TEST(mnemosine_malloc_free_tests);
+#if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
+//    CUTE_RUN_TEST(mnemosine_malloc_free_async_tests);
+#endif
+CUTE_TEST_CASE_END
+
+CUTE_TEST_CASE(mnemosine_malloc_free_tests)
+    struct mnemosine_ctx mn;
+    void *ptr[4];
+
+    CUTE_ASSERT(mnemosine_init(&mn, mnemosine_size_kb(1), 0) == 1);
+
+    ptr[0] = mnemosine_malloc(&mn, 512);
+    CUTE_ASSERT(ptr[0] != NULL);
+
+    ptr[1] = mnemosine_malloc(&mn, 256);
+    CUTE_ASSERT(ptr[1] != NULL);
+
+    ptr[2] = mnemosine_malloc(&mn, 512);
+    CUTE_ASSERT(ptr[2] == NULL);
+
+    ptr[2] = mnemosine_malloc(&mn, 256);
+    CUTE_ASSERT(ptr[2] != NULL);
+
+    ptr[3] = malloc(512);
+    CUTE_ASSERT(ptr[3] != NULL);
+
+    CUTE_ASSERT(mnemosine_free(&mn, ptr[0]) == 1);
+    CUTE_ASSERT(mnemosine_free(&mn, ptr[2]) == 1);
+    CUTE_ASSERT(mnemosine_free(&mn, ptr[1]) == 1);
+    CUTE_ASSERT(mnemosine_free(&mn, ptr[3]) == 0);
+    free(ptr[3]);
+
+    mnemosine_finis(&mn);
+CUTE_TEST_CASE_END
+
+#if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
+void *get_memory(void *arg) {
+    struct async_test_ctx *a = (struct async_test_ctx *)arg;
+    printf("\t[get_memory] %s has join.\n", a->id);
+    sleep(a->secs2snooze);
+    a->ptr = mnemosine_malloc(a->mn, a->ptr_size);
+    printf("\t[get_memory] %s has left.\n", a->id);
+    pthread_detach(pthread_self());
+    return NULL;
+}
+
+void *free_memory(void *arg) {
+    struct async_test_ctx *a = (struct async_test_ctx *)arg;
+    printf("\t[free_memory] %s has join.\n", a->id);
+    sleep(a->secs2snooze);
+    a->retval = mnemosine_free(a->mn, a->ptr);
+    printf("\t[free_memory] %s has left.\n", a->id);
+    pthread_detach(pthread_self());
+    return NULL;
+}
+
+CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
+    // WARN(Rafael): Working but leaking pthread resources even with detached threads. Find a way of solving it.
+    struct mnemosine_ctx mn;
+    struct async_test_ctx thread[3];
+
+    srand(time(0));
+
+    CUTE_ASSERT(mnemosine_init(&mn, mnemosine_size_kb(1), 0) == 1);
+
+    thread[0].id = "thread 0";
+    thread[0].secs2snooze = (rand() % 5) + 1;
+    thread[0].mn = &mn;
+    thread[0].ptr_size = 512;
+
+    thread[1].id = "thread 1";
+    thread[1].secs2snooze = (rand() % 5) + 1;
+    thread[1].mn = &mn;
+    thread[1].ptr_size = 256;
+
+    thread[2].id = "thread 2";
+    thread[2].secs2snooze = (rand() % 5) + 1;
+    thread[2].mn = &mn;
+    thread[2].ptr_size = 2048;
+
+    CUTE_ASSERT(pthread_create(&thread[0].t, NULL, get_memory, &thread[0]) == 0);
+    CUTE_ASSERT(pthread_create(&thread[1].t, NULL, get_memory, &thread[1]) == 0);
+    CUTE_ASSERT(pthread_create(&thread[2].t, NULL, get_memory, &thread[2]) == 0);
+
+    pthread_join(thread[0].t, NULL);
+    pthread_join(thread[1].t, NULL);
+    pthread_join(thread[2].t, NULL);
+
+    pthread_detach(thread[0].t);
+    pthread_detach(thread[1].t);
+    pthread_detach(thread[2].t);
+
+    CUTE_ASSERT(thread[0].ptr != NULL);
+    CUTE_ASSERT(thread[1].ptr != NULL);
+    CUTE_ASSERT(thread[2].ptr == NULL);
+
+    thread[2].ptr = malloc(2048);
+    CUTE_ASSERT(thread[2].ptr != NULL);
+
+    CUTE_ASSERT(pthread_create(&thread[0].t, NULL, free_memory, &thread[0]) == 0);
+    CUTE_ASSERT(pthread_create(&thread[1].t, NULL, free_memory, &thread[1]) == 0);
+    CUTE_ASSERT(pthread_create(&thread[2].t, NULL, free_memory, &thread[2]) == 0);
+
+    pthread_join(thread[0].t, NULL);
+    pthread_join(thread[1].t, NULL);
+    pthread_join(thread[2].t, NULL);
+
+    pthread_detach(thread[0].t);
+    pthread_detach(thread[1].t);
+    pthread_detach(thread[2].t);
+
+    CUTE_ASSERT(thread[0].retval == 1);
+    CUTE_ASSERT(thread[1].retval == 1);
+    CUTE_ASSERT(thread[2].retval == 0);
+
+    free(thread[2].ptr);
+
+    mnemosine_finis(&mn);
+CUTE_TEST_CASE_END
+#endif
+
+
+CUTE_TEST_CASE(mnemosine_size_macros_tests)
+    CUTE_ASSERT(mnemosine_size_kb(1) == 1024);
+    CUTE_ASSERT(mnemosine_size_kb(2) == 2048);
+    CUTE_ASSERT(mnemosine_size_kb(3) == 3072);
+    CUTE_ASSERT(mnemosine_size_kb(4) == 4096);
+
+    CUTE_ASSERT(mnemosine_size_mb(1) == 1048576);
+    CUTE_ASSERT(mnemosine_size_mb(40) == 41943040);
+
+    CUTE_ASSERT(mnemosine_size_gb(1) == 1073741824);
+    CUTE_ASSERT(mnemosine_size_gb(2) == 2147483648);
 CUTE_TEST_CASE_END
 
 CUTE_MAIN(mnemosine_tests);

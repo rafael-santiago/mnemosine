@@ -34,8 +34,13 @@ libmnemosine.preloading() {
 }
 
 libmnemosine.prologue() {
+    var option type list;
     $inc = hefesto.sys.get_option("includes");
     $cflags = hefesto.sys.get_option("cflags");
+    $option = hefesto.sys.get_option("no-pthread");
+    if ($option.count() > 0 || hefesto.sys.os_name() == "minix" || hefesto.sys.os_name() == "windows") {
+        $cflags.add_item("-DMNEMOSINE_NO_PTHREAD=1");
+    }
     $lib = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     $src.ls(".*\\.c$");
@@ -64,6 +69,11 @@ local function run_tests() : result type int {
         $name = $toolset_name;
         $name.replace("-.*$", "");
         $cmdline = "hefesto --toolset=" + $name;
+        var option type list;
+        $option = hefesto.sys.get_option("no-pthread");
+        if ($option.count() > 0) {
+            $cmdline = $cmdline + " --no-pthread";
+        }
         $exit_code = hefesto.sys.run($cmdline);
         hefesto.sys.cd($old_cwd);
     } else {

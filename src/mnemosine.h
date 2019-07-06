@@ -10,9 +10,9 @@
 
 #include <stdlib.h>
 
-#define mnemosize_size_kb(s) ( (s) * (2 << 10) )
-#define mnemosize_size_mb(s) ( (s) * (2 << 20) )
-#define mnemosize_size_gb(s) ( (s) * (2 << 30) )
+#define mnemosine_size_kb(s) ( (size_t)(s) * ((size_t)1 << 10) )
+#define mnemosine_size_mb(s) ( (size_t)(s) * ((size_t)1 << 20) )
+#define mnemosine_size_gb(s) ( (size_t)(s) * ((size_t)1 << 30) )
 
 struct mnemosine_ctx {
     struct mnemosine_priv_data_ctx *priv;

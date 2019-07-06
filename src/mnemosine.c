@@ -17,7 +17,7 @@
 
 #if !defined(MNEMOSINE_NO_STATIC_HEAP)
 # if !defined(MNEMOSINE_STATIC_HEAP_SIZE)
-#  define MNEMOSINE_STATIC_HEAP_SIZE     mnemosize_size_mb(5) // INFO(Rafael): 5MB.
+#  define MNEMOSINE_STATIC_HEAP_SIZE     mnemosine_size_mb(5) // INFO(Rafael): 5MB.
 # endif
 #endif
 
@@ -151,6 +151,8 @@ void *mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize) {
             // INFO(Rafael): Verifying if the current free segment fits the wanted size.
             segfound = (mn->priv->hhash[mnemosine_hash(mn, hp)] == 0);
         }
+
+        segfound = (segfound && segsize == ssize);
 
         if (!segfound && hp != hp_end) {
             // INFO(Rafael): Finding the next effective free segment.
