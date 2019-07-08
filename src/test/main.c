@@ -37,7 +37,7 @@ CUTE_TEST_CASE(mnemosine_tests)
     CUTE_RUN_TEST(mnemosine_size_macros_tests);
     CUTE_RUN_TEST(mnemosine_malloc_free_tests);
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
-//    CUTE_RUN_TEST(mnemosine_malloc_free_async_tests);
+    CUTE_RUN_TEST(mnemosine_malloc_free_async_tests);
 #endif
 CUTE_TEST_CASE_END
 
@@ -78,7 +78,6 @@ void *get_memory(void *arg) {
     sleep(a->secs2snooze);
     a->ptr = mnemosine_malloc(a->mn, a->ptr_size);
     printf("\t[get_memory] %s has left.\n", a->id);
-    pthread_detach(pthread_self());
     return NULL;
 }
 
@@ -88,7 +87,6 @@ void *free_memory(void *arg) {
     sleep(a->secs2snooze);
     a->retval = mnemosine_free(a->mn, a->ptr);
     printf("\t[free_memory] %s has left.\n", a->id);
-    pthread_detach(pthread_self());
     return NULL;
 }
 
@@ -96,10 +94,13 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     // WARN(Rafael): Working but leaking pthread resources even with detached threads. Find a way of solving it.
     struct mnemosine_ctx mn;
     struct async_test_ctx thread[3];
+    int smelly_hack = g_cute_leak_check;
 
     srand(time(0));
 
     CUTE_ASSERT(mnemosine_init(&mn, mnemosine_size_kb(1), 0) == 1);
+
+    g_cute_leak_check = 0;
 
     thread[0].id = "thread 0";
     thread[0].secs2snooze = (rand() % 5) + 1;
@@ -124,10 +125,6 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     pthread_join(thread[1].t, NULL);
     pthread_join(thread[2].t, NULL);
 
-    pthread_detach(thread[0].t);
-    pthread_detach(thread[1].t);
-    pthread_detach(thread[2].t);
-
     CUTE_ASSERT(thread[0].ptr != NULL);
     CUTE_ASSERT(thread[1].ptr != NULL);
     CUTE_ASSERT(thread[2].ptr == NULL);
@@ -143,15 +140,13 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     pthread_join(thread[1].t, NULL);
     pthread_join(thread[2].t, NULL);
 
-    pthread_detach(thread[0].t);
-    pthread_detach(thread[1].t);
-    pthread_detach(thread[2].t);
-
     CUTE_ASSERT(thread[0].retval == 1);
     CUTE_ASSERT(thread[1].retval == 1);
     CUTE_ASSERT(thread[2].retval == 0);
 
     free(thread[2].ptr);
+
+    g_cute_leak_check = smelly_hack;
 
     mnemosine_finis(&mn);
 CUTE_TEST_CASE_END
