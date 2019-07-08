@@ -84,7 +84,7 @@ is no enough memory in the Mnemosine's heap it will return NULL and you can try 
 slower way (regular malloc() as instance). So if the passed pointer was not freed by mnemosine_free()
 it should be freed by the regular free() function.
 
-The function mnemosine_malloc always returns zeroed memory segments.
+The mnemosine_malloc() function always returns zeroed memory segments.
 
 The context expected by those functions is the same used during the mnemosine_init() call [duh!].
 
