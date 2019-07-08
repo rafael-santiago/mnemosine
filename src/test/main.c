@@ -152,7 +152,6 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
 CUTE_TEST_CASE_END
 #endif
 
-
 CUTE_TEST_CASE(mnemosine_size_macros_tests)
     CUTE_ASSERT(mnemosine_size_kb(1) == 1024);
     CUTE_ASSERT(mnemosine_size_kb(2) == 2048);
