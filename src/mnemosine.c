@@ -157,8 +157,8 @@ void *mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize) {
         if (!segfound && hp != hp_end) {
             // INFO(Rafael): Finding the next effective free segment.
             do {
-                hp++;
-            } while (hp != hp_end && mn->priv->hhash[mnemosine_hash(mn, hp)] != 0);
+                hp += mn->priv->hhash[mnemosine_hash(mn, hp)];
+            } while (hp < hp_end && mn->priv->hhash[mnemosine_hash(mn, hp)] != 0);
         }
     }
 
