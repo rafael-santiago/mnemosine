@@ -1,4 +1,97 @@
 Mnemosine
 ---------
 
-Description: A library which implements a preallocated heap scheme.
+Description: A library which implements a pre-allocated heap scheme.
+
+Why should I use it?
+--------------------
+
+Sometimes you need the heap, however, you also need to avoid the overhead of occupying the
+operating system with tons of allocations and deallocations. Using a simpler pre-allocated
+heap ***may*** help you on speeding up your stuff.
+
+Mnemosine seeks to implement a well-simple heap scheme with simple and straightforward
+memory management algorithm. It creates a dedicated global heap to your application.
+
+How should I build it?
+----------------------
+
+Mnemosine build is based on a tool of mine called Hefesto [https://github.com/rafael-santiago/hefesto].
+Once this tool well-installed just enter into src subdirectory of Mnemosine and call Hefesto from there.
+
+The ar file libmnemosine.a will be created at ../lib. Use it for linking your stuff that uses Mnemosine
+conveniences.
+
+The Mnemosine build is well-simple. There are only two relevant user's build options:
+
+    - '--no-pthread' (It will make Mnemosine thread unsafe, the default is to be thread safe
+                      where it can be)
+
+    - '--mnemosine-static-heap-size=<n>' (The maximum size of the static buffer used as heap.
+                                          This number is interpreted as n megabytes.
+                                          The default is 5MB)
+
+How should I use it?
+--------------------
+
+Mnemosine try to be as suckless [https://suckless.org] as possible. Thus, all you should do is to
+include the mnemosine.h header file and every feature will be accessible to you.
+
+Before start using Mnemosine into your program you need to initialize it through the function
+mnemosine_init().
+
+The init function expects three arguments:
+
+    - A pointer to struct mnemosine_ctx.
+    - The pre-allocated heap size.
+    - The flag use_mnheap (When 1 it will use the static buffer which the size was configured during the build,
+                           otherwise it will allocate a buffer with the requested size. Note that when using
+                           the internal static buffer you are limited to the maximum configured size).
+
+In terms of code it would be:
+
+    #include <mnemosine.h>
+
+    ...
+
+    struct mnemosine_ctx mn;
+
+    ...
+
+    if (!mnemosine_init(&mn, 4096, 0)) {
+        printf("ERROR: unable to create the internal heap.\n");
+        exit(1);
+    }
+
+    ...
+
+Once initialized you will use two functions. A function for memory allocation and a function for
+memory deallocation.
+
+To allocate memory you call:
+
+    mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize);
+
+To deallocate memory you call:
+
+    mnemosine_free(struct mnemosine_ctx *mn, void *addr);
+
+The mnemosine_free() function when actually deallocates return 1. When it returns 0 it means that
+the passed pointer is not within the pre-allocated heap segment range. This is useful when you has
+integrated Mnemosine with your custom allocator. So you start using mnemosine_malloc(), when there
+is no enough memory in the Mnemosine's heap it will return NULL and you can try to get memory in a
+slower way (regular malloc() as instance). So if the passed pointer was not freed by mnemosine_free()
+it should be freed by the regular free() function.
+
+The context expected by those function is the same used during the mnemosine_init() call [duh!].
+
+After using mnemosine into your program you should deinitialize it just by calling:
+
+    mnemosine_finis(struct mnemosine_ctx *mn)
+
+The context expected is the same used during the mnemosine_init() [duh!].
+
+
+... and we done here. Now you are a PhD on it, congrats! Bye!
+
+Rafael.
