@@ -84,14 +84,15 @@ is no enough memory in the Mnemosine's heap it will return NULL and you can try 
 slower way (regular malloc() as instance). So if the passed pointer was not freed by mnemosine_free()
 it should be freed by the regular free() function.
 
-The context expected by those function is the same used during the mnemosine_init() call [duh!].
+The function mnemosine_malloc always returns zeroed memory segments.
+
+The context expected by those functions is the same used during the mnemosine_init() call [duh!].
 
 After using mnemosine into your program you should deinitialize it just by calling:
 
     mnemosine_finis(struct mnemosine_ctx *mn)
 
 The context expected is the same used during the mnemosine_init() [duh!].
-
 
 ... and we done here. Now you are a PhD on it, congrats! Bye!
 
