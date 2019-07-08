@@ -11,7 +11,8 @@ operating system with tons of allocations and deallocations. Using a simpler pre
 heap ***may*** help you on speeding up your stuff.
 
 Mnemosine seeks to implement a well-simple heap scheme with simple and straightforward
-memory management algorithm. It creates a dedicated global heap to your application.
+memory management algorithm. It creates a dedicated (maybe global) memory pool to your
+application.
 
 How should I build it?
 ----------------------
@@ -34,8 +35,8 @@ The Mnemosine build is well-simple. There are only two relevant user's build opt
 How should I use it?
 --------------------
 
-Mnemosine try to be as suckless [https://suckless.org] as possible. Thus, all you should do is to
-include the mnemosine.h header file and every feature will be accessible to you.
+Mnemosine try to be as suckless [https://suckless.org/philosophy] as possible. Thus, all you should do
+is to include the mnemosine.h header file and every feature will be accessible to you.
 
 Before start using Mnemosine into your program you need to initialize it through the function
 mnemosine_init().
@@ -46,7 +47,8 @@ The init function expects three arguments:
     - The pre-allocated heap size.
     - The flag use_mnheap (When 1 it will use the static buffer which the size was configured during the build,
                            otherwise it will allocate a buffer with the requested size. Note that when using
-                           the internal static buffer you are limited to the maximum configured size).
+                           the internal static buffer you are limited to the maximum configured size.
+                           When using the internal static buffer the memory pool will be global).
 
 In terms of code it would be:
 
