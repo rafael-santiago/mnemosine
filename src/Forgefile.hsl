@@ -41,6 +41,13 @@ libmnemosine.prologue() {
     if ($option.count() > 0 || hefesto.sys.os_name() == "minix" || hefesto.sys.os_name() == "windows") {
         $cflags.add_item("-DMNEMOSINE_NO_PTHREAD=1");
     }
+    $option = hefesto.sys.get_option("mnemosine-static-heap-size");
+    if ($option.count() > 0) {
+        $cflags.add_item("-DMNEMOSINE_STATIC_HEAP_SIZE=\"mnemosine_size_mb(" + $option.item(0) + ")\"");
+        hefesto.sys.echo("MNEMOSINE INFO: You has configured the static heap to " + $option.item(0) + "MB.\n\n");
+    } else {
+        hefesto.sys.echo("MNEMOSINE INFO: The default static heap size is 5MB.\n\n");
+    }
     $lib = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     $src.ls(".*\\.c$");
