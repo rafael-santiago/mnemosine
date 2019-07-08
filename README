@@ -20,8 +20,7 @@ How should I build it?
 Mnemosine build is based on a tool of mine called Hefesto [https://github.com/rafael-santiago/hefesto].
 Once this tool well-installed just enter into src subdirectory of Mnemosine and call Hefesto from there.
 
-The ar file libmnemosine.a will be created at ../lib. Use it for linking your stuff that uses Mnemosine
-conveniences.
+The ar file libmnemosine.a will be created at ../lib. Use it to link your stuff.
 
 The Mnemosine build is well-simple. There are only two relevant user's build options:
 
