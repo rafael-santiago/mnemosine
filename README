@@ -66,6 +66,21 @@ In terms of code it would be:
 
     ...
 
+The second argument related to size is expressed in bytes. Anyway, you can use three nice Mnemosine
+macros that can help you on simplifying the heap size definition:
+
+    - mnemosine_size_kb(n)
+
+    - mnemosine_size_mb(n)
+
+    - mnemosine_size_gb(n)
+
+The above mnemosine_init() call could become more expressive in the following way:
+
+    if (!mnemosine_init(&mn, mnemosine_size_kb(4), 0)) {
+        ...
+    }
+
 Once initialized you will use two functions. A function for memory allocation and a function for
 memory deallocation.
 
