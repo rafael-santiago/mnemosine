@@ -37,17 +37,18 @@ How should I use it?
 Mnemosine try to be as suckless [https://suckless.org/philosophy] as possible. Thus, all you should do
 is to include the mnemosine.h header file and every feature will be accessible to you.
 
-Before start using Mnemosine into your program you need to initialize it through the function
+Before starting use Mnemosine into your program you need to initialize it through the function
 mnemosine_init().
 
 The init function expects three arguments:
 
     - A pointer to struct mnemosine_ctx.
     - The pre-allocated heap size.
-    - The flag use_mnheap (When 1 it will use the static buffer which the size was configured during the build,
-                           otherwise it will allocate a buffer with the requested size. Note that when using
-                           the internal static buffer you are limited to the maximum configured size.
-                           When using the internal static buffer the memory pool will be global).
+    - The flag use_mnheap (When 1 it will use the static buffer which the size was configured during the
+                           library build, otherwise it will allocate a buffer with the requested size.
+                           Note that when using the internal static buffer you are limited to the maximum
+                           configured size. When using the internal static buffer the memory pool will be
+                           global).
 
 In terms of code it would be:
 
@@ -95,8 +96,8 @@ To deallocate memory you call:
 The mnemosine_free() function when actually deallocates return 1. When it returns 0 it means that
 the passed pointer is not within the pre-allocated heap segment range. This is useful when you has
 integrated Mnemosine with your custom allocator. So you start using mnemosine_malloc(), when there
-is no enough memory in the Mnemosine's heap it will return NULL and you can try to get memory in a
-slower way (regular malloc() as instance). So if the passed pointer was not freed by mnemosine_free()
+is not enough memory in the Mnemosine's heap it will return NULL and you can try to get memory in a
+slower way (regular malloc() as instance), so if the passed pointer was not freed by mnemosine_free()
 it should be freed by the regular free() function.
 
 The mnemosine_malloc() function always returns zeroed memory segments.
