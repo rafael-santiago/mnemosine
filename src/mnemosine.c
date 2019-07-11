@@ -36,6 +36,8 @@ struct mnemosine_priv_data_ctx {
     size_t hhash_size;
 #if !defined(_WIN32) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_t lock;
+#else
+    HANDLE lock;
 #endif
 };
 
@@ -63,6 +65,14 @@ int mnemosine_init(struct mnemosine_ctx *mn, size_t heap_size, const int use_mnh
     }
 
     pthread_mutex_lock(&mn->priv->lock);
+#elif defined(_WIN32)
+    mn->priv->lock = CreateMutex(NULL, FALSE, NULL);
+
+    if (mn->priv->lock == NULL) {
+        goto mnemosine_init_epilogue;
+    }
+
+    WaitForSingleObject(mn->priv->lock, INFINITE);
 #endif
 
 
@@ -118,6 +128,8 @@ mnemosine_init_epilogue:
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_unlock(&mn->priv->lock);
+#elif defined(_WIN32)
+    ReleaseMutex(mn->priv->lock);
 #endif
 
     return no_error;
@@ -131,6 +143,8 @@ void *mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize) {
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_lock(&mn->priv->lock);
+#elif defined(_WIN32)
+    WaitForSingleObject(mn->priv->lock, INFINITE);
 #endif
 
     addr = NULL;
@@ -180,6 +194,8 @@ mnemosine_malloc_epilogue:
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_unlock(&mn->priv->lock);
+#elif defined(_WIN32)
+    ReleaseMutex(mn->priv->lock);
 #endif
 
     return addr;
@@ -191,6 +207,8 @@ int mnemosine_free(struct mnemosine_ctx *mn, void *addr) {
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_lock(&mn->priv->lock);
+#elif defined(_WIN32)
+    WaitForSingleObject(mn->priv->lock, INFINITE);
 #endif
 
     no_error = 0;
@@ -207,6 +225,8 @@ int mnemosine_free(struct mnemosine_ctx *mn, void *addr) {
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
     pthread_mutex_unlock(&mn->priv->lock);
+#elif defined(_WIN32)
+    ReleaseMutex(mn->priv->lock);
 #endif
 
     return no_error;
@@ -218,6 +238,8 @@ void mnemosine_finis(struct mnemosine_ctx *mn) {
         // ???(Rafael): This is kind of crazy, maybe it would be better a reference counter or
         //              simply a semaphore instead of a mutex.
         pthread_mutex_lock(&mn->priv->lock);
+#elif defined(_WIN32)
+        WaitForSingleObject(mn->priv->lock, INFINITE);
 #endif
         memset(mn->priv->heap, 0, mn->priv->heap_size);
         memset(mn->priv->hhash, 0, mn->priv->hhash_size * sizeof(size_t));
@@ -234,6 +256,10 @@ void mnemosine_finis(struct mnemosine_ctx *mn) {
 
 #if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
         pthread_mutex_destroy(&mn->priv->lock);
+#elif defined(_WIN32)
+        if (mn->priv->lock != NULL) {
+            CloseHandle(mn->priv->lock);
+        }
 #endif
 
         free(mn->priv);

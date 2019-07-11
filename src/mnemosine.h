@@ -10,6 +10,10 @@
 
 #include <stdlib.h>
 
+#if defined(_WIN32)
+# include <unistd.h>
+#endif
+
 #define mnemosine_size_kb(s) ( (size_t)(s) * ((size_t)1 << 10) )
 #define mnemosine_size_mb(s) ( (size_t)(s) * ((size_t)1 << 20) )
 #define mnemosine_size_gb(s) ( (size_t)(s) * ((size_t)1 << 30) )

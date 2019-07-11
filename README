@@ -14,6 +14,8 @@ Mnemosine seeks to implement a well-simple heap scheme with simple and straightf
 memory management algorithm. It creates a dedicated (maybe global) memory pool to your
 application.
 
+You can easily use it under: Linux, FreeBSD, NetBSD, OpenBSD, Minix, Solaris and Windows.
+
 How should I build it?
 ----------------------
 
@@ -87,11 +89,11 @@ memory deallocation.
 
 To allocate memory you call:
 
-    mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize);
+    void *mnemosine_malloc(struct mnemosine_ctx *mn, size_t ssize);
 
 To deallocate memory you call:
 
-    mnemosine_free(struct mnemosine_ctx *mn, void *addr);
+    int mnemosine_free(struct mnemosine_ctx *mn, void *addr);
 
 The mnemosine_free() function when actually deallocates return 1. When it returns 0 it means that
 the passed pointer is not within the pre-allocated heap segment range. This is useful when you has
