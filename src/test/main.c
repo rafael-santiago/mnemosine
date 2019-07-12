@@ -7,52 +7,60 @@
  */
 #include <cutest.h>
 #include <mnemosine.h>
-#if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
-# include <stdlib.h>
-# include <time.h>
-# include <pthread.h>
-#endif
-#if defined(_WIN32)
-# include <time.h>
-# include <windows.h>
+#if !defined(MNEMOSINE_NO_MUTEXES)
+# if defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)
+#  include <stdlib.h>
+#  include <time.h>
+#  include <pthread.h>
+# endif
+# if defined(_WIN32)
+#  include <time.h>
+#  include <windows.h>
+# endif
 #endif
 
-#if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
+#if !defined(MNEMOSINE_NO_MUTEXES)
+# if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
 struct async_test_ctx {
     char *id;
     int secs2snooze;
-#if !defined(_WIN32)
+# if !defined(_WIN32)
     pthread_t t;
-#else
+# else
     HANDLE t;
-#endif
+# endif
     struct mnemosine_ctx *mn;
     void *ptr;
     size_t ptr_size;
     int retval;
 };
+# endif
 #endif
 
 CUTE_DECLARE_TEST_CASE(mnemosine_tests);
 CUTE_DECLARE_TEST_CASE(mnemosine_size_macros_tests);
 CUTE_DECLARE_TEST_CASE(mnemosine_malloc_free_tests);
-#if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
+#if !defined(MNEMOSINE_NO_MUTEXES)
+# if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
 CUTE_DECLARE_TEST_CASE(mnemosine_malloc_free_async_tests);
 
-# if !defined(_WIN32)
+#  if !defined(_WIN32)
 void *get_memory(void *arg);
 void *free_memory(void *arg);
-#else
+#  else
 DWORD WINAPI get_memory(void *arg);
 DWORD WINAPI free_memory(void *arg);
+#  endif
 # endif
 #endif
 
 CUTE_TEST_CASE(mnemosine_tests)
     CUTE_RUN_TEST(mnemosine_size_macros_tests);
     CUTE_RUN_TEST(mnemosine_malloc_free_tests);
-#if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
+#if !defined(MNEMOSINE_NO_MUTEXES)
+# if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
     CUTE_RUN_TEST(mnemosine_malloc_free_async_tests);
+# endif
 #endif
 CUTE_TEST_CASE_END
 
@@ -86,8 +94,9 @@ CUTE_TEST_CASE(mnemosine_malloc_free_tests)
     mnemosine_finis(&mn);
 CUTE_TEST_CASE_END
 
-#if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
-#if !defined(_WIN32)
+#if !defined(MNEMOSINE_NO_MUTEXES)
+# if (defined(__unix__) && !defined(MNEMOSINE_NO_PTHREAD)) || defined(_WIN32)
+#  if !defined(_WIN32)
 void *get_memory(void *arg) {
     struct async_test_ctx *a = (struct async_test_ctx *)arg;
     printf("\t[get_memory] %s has join.\n", a->id);
@@ -105,7 +114,7 @@ void *free_memory(void *arg) {
     printf("\t[free_memory] %s has left.\n", a->id);
     return NULL;
 }
-# else
+#  else
 DWORD WINAPI get_memory(void *arg) {
     struct async_test_ctx *a = (struct async_test_ctx *)arg;
     printf("\t[get_memory] %s has join.\n", a->id);
@@ -125,10 +134,10 @@ DWORD WINAPI free_memory(void *arg) {
     fflush(stdout);
     return 0;
 }
-# endif
+#  endif
 
 CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
-#if !defined(_WIN32)
+#  if !defined(_WIN32)
     // WARN(Rafael): Working but leaking pthread resources even with detached threads. Find a way of solving it.
     struct mnemosine_ctx mn;
     struct async_test_ctx thread[3];
@@ -187,7 +196,7 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     g_cute_leak_check = smelly_hack;
 
     mnemosine_finis(&mn);
-#else
+#  else
     struct mnemosine_ctx mn;
     struct async_test_ctx thread[3];
     int smelly_hack = g_cute_leak_check;
@@ -226,7 +235,7 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     CloseHandle(thread[0].t);
     CloseHandle(thread[1].t);
     CloseHandle(thread[2].t);
- 
+
     CUTE_ASSERT(thread[0].ptr != NULL);
     CUTE_ASSERT(thread[1].ptr != NULL);
     CUTE_ASSERT(thread[2].ptr == NULL);
@@ -257,8 +266,9 @@ CUTE_TEST_CASE(mnemosine_malloc_free_async_tests)
     g_cute_leak_check = smelly_hack;
 
     mnemosine_finis(&mn);
-#endif
+#  endif
 CUTE_TEST_CASE_END
+# endif
 #endif
 
 CUTE_TEST_CASE(mnemosine_size_macros_tests)

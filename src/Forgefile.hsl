@@ -48,6 +48,11 @@ libmnemosine.prologue() {
     } else {
         hefesto.sys.echo("MNEMOSINE INFO: The default static heap size is 5MB.\n\n");
     }
+    $option = hefesto.sys.get_option("no-mutexes");
+    if ($option.count() > 0) {
+        $cflags.add_item("-DMNEMOSINE_NO_MUTEXES=1");
+        hefesto.sys.echo("MNEMOSINE INFO: No mutex support requested.\n\n");
+    }
     $lib = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     $src.ls(".*\\.c$");
@@ -80,6 +85,10 @@ local function run_tests() : result type int {
         $option = hefesto.sys.get_option("no-pthread");
         if ($option.count() > 0) {
             $cmdline = $cmdline + " --no-pthread";
+        }
+        $option = hefesto.sys.get_option("no-mutexes");
+        if ($option.count() > 0) {
+            $cmdline = $cmdline + " --no-mutexes";
         }
         $exit_code = hefesto.sys.run($cmdline);
         hefesto.sys.cd($old_cwd);

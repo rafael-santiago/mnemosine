@@ -26,8 +26,10 @@ The ar file libmnemosine.a will be created at ../lib. Use it to link your stuff.
 
 The Mnemosine build is well-simple. There are only two relevant user's build options:
 
-    - '--no-pthread' (It will make Mnemosine thread unsafe, the default is to be thread safe
-                      where it can be)
+    - '--no-mutexes' (This is the default, any synchronization will be applied during
+                      allocations and deallocations)
+
+    - '--no-pthread' (It will make Mnemosine thread unsafe on Unixes)
 
     - '--mnemosine-static-heap-size=<n>' (The maximum size of the static buffer used as heap.
                                           This number is interpreted as n megabytes.

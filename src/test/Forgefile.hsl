@@ -39,6 +39,10 @@ mnemosine-tests.prologue() {
     if ($option.count() > 0 || hefesto.sys.os_name() == "minix" || hefesto.sys.os_name() == "windows") {
         $cflags.add_item("-DMNEMOSINE_NO_PTHREAD=1");
     }
+    $option = hefesto.sys.get_option("no-mutexes");
+    if ($option.count() > 0) {
+        $cflags.add_item("-DMNEMOSINE_NO_MUTEXES=1");
+    }
     $lib = hefesto.sys.get_option("libraries");
     $ldflags = hefesto.sys.get_option("ldflags");
     if (hefesto.sys.os_name() == "linux") {
